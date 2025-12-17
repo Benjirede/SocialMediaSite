@@ -1,17 +1,17 @@
 # Python
 __pycache__/
-*.py[cod]
-cookies.txt
+*.pyc
 *.egg-info/
 .env
 venv/
 
+# Local / testing artifacts
+cookies.txt
+*.sqlite3
+
 # Flask
 instance/
 *.log
-
-# Migrations
-migrations/versions/__pycache__/
 
 # OS
 .DS_Store
