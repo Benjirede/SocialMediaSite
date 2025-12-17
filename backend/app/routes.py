@@ -77,8 +77,13 @@ def delete_user(user_id):
 @main.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    user = User.query.filter_by(username=data.get("username")).first()
-    if user and check_password_hash(user.password_hash, data.get("password")):
+    identifier = data.get("identifier")  # can be username or email
+    password = data.get("password")
+    if not identifier or not password:
+        return jsonify(error="Missing credentials"), 400
+
+    user = User.query.filter((User.username==identifier) | (User.email==identifier)).first()
+    if user and check_password_hash(user.password_hash, password):
         login_user(user)
         return jsonify(message="Logged in")
     return jsonify(message="Invalid credentials"), 401
@@ -88,6 +93,19 @@ def login():
 def logout():
     logout_user()
     return jsonify(message="Logged out")
+
+# --------------------------
+# Current User
+# --------------------------
+@main.route('/me', methods=['GET'])
+@login_required
+def get_current_user():
+    return jsonify(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email
+    )
+
 
 # --------------------------
 # Post Routes
