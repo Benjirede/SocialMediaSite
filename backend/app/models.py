@@ -9,7 +9,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
 
-    posts = db.relationship('Post', backref='author', lazy=True)
+    posts = db.relationship('Post', back_populates='user', cascade='all, delete-orphan')
 
     friends = db.relationship(
         'Friend',
@@ -43,6 +43,7 @@ class Post(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     image_url = db.Column(db.String(255), nullable=True)
+    user = db.relationship('User', back_populates='posts')
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)

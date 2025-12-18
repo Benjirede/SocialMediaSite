@@ -77,7 +77,8 @@ def delete_user(user_id):
 @main.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    identifier = data.get("identifier")  # can be username or email
+    print("Login payload:", data) # Debug statement
+    identifier = data.get("identifier") or data.get("username") or data.get("email")  # can be username or email
     password = data.get("password")
     if not identifier or not password:
         return jsonify(error="Missing credentials"), 400
@@ -114,6 +115,8 @@ def get_current_user():
 @login_required
 def create_post():
     data = request.get_json()
+    print("Create post payload:", data)  # Debug statement
+    print("Current user ID:", current_user.id)  # Debug statement
     if not data.get("content"):
         return jsonify(error="Content required"), 400
     post = Post(user_id=current_user.id, content=data["content"], image_url=data.get("image_url"))
@@ -122,9 +125,37 @@ def create_post():
     return jsonify(id=post.id, content=post.content, timestamp=post.timestamp.isoformat()), 201
 
 @main.route('/posts', methods=['GET'])
+@login_required
 def get_posts():
-    posts = Post.query.order_by(Post.timestamp.desc()).all()
-    return jsonify([{"id": p.id, "user_id": p.user_id, "content": p.content, "timestamp": p.timestamp.isoformat()} for p in posts])
+    # Get IDs of friends with accepted requests
+    friends = Friend.query.filter(
+        ((Friend.user_id == current_user.id) | (Friend.friend_id == current_user.id)) &
+        (Friend.status == "accepted")
+    ).all()
+
+    friend_ids = [
+        f.friend_id if f.user_id == current_user.id else f.user_id
+        for f in friends
+    ]
+
+    # Include your own user ID
+    allowed_ids = friend_ids + [current_user.id]
+
+    # Fetch posts by allowed IDs
+    posts = Post.query.filter(Post.user_id.in_(allowed_ids)).order_by(Post.timestamp.desc()).all()
+
+    return jsonify([
+        {
+            "id": p.id,
+            "content": p.content,
+            "timestamp": p.timestamp.isoformat(),
+            "author": {
+                "id": p.user.id,
+                "username": p.user.username
+            }
+        }
+        for p in posts
+    ])
 
 @main.route('/posts/<int:post_id>', methods=['GET'])
 def get_post(post_id):

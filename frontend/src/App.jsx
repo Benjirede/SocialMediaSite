@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import Login from "./components/Login.jsx"
 import Register from "./components/Register.jsx"
+import Posts from "./components/Posts.jsx"
 import { api } from "./api/client.js"
 
 function App() {
@@ -57,6 +58,8 @@ function App() {
       >
         Logout
       </button>
+
+      <Posts user={user} />
     </div>
   );
 }
