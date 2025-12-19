@@ -11,19 +11,6 @@ class User(db.Model, UserMixin):
 
     posts = db.relationship('Post', back_populates='user', cascade='all, delete-orphan')
 
-    friends = db.relationship(
-        'Friend',
-        foreign_keys='Friend.user_id',
-        backref='requester',
-        lazy=True
-    )
-    friend_of = db.relationship(
-        'Friend',
-        foreign_keys='Friend.friend_id',
-        backref='receiver',
-        lazy=True
-    )
-
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -36,6 +23,16 @@ class Friend(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     friend_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default='pending', nullable=False)
+    sender = db.relationship(
+        "User",
+        foreign_keys=[user_id],
+        backref="sent_requests"
+    )
+    receiver = db.relationship(
+        "User",
+        foreign_keys=[friend_id],
+        backref="received_requests"
+    )
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -2,11 +2,14 @@ import { useEffect, useState } from "react"
 import Login from "./components/Login.jsx"
 import Register from "./components/Register.jsx"
 import Posts from "./components/Posts.jsx"
+import FriendRequests from "./components/FriendRequests.jsx"
+import Users from "./components/Users.jsx"
 import { api } from "./api/client.js"
 
 function App() {
   const [user, setUser] = useState(null)
   const [mode, setMode] = useState("login") // "login" or "register"
+  const [page, setPage] = useState("feed");
 
   const fetchMe = async () => {
     const res = await api("/me")
@@ -59,7 +62,19 @@ function App() {
         Logout
       </button>
 
-      <Posts user={user} />
+      <div style={{ marginBottom: "1rem" }}>
+        <button onClick={() => setPage("feed")}>Feed</button>{" "}
+        <button onClick={() => setPage("friends")}>Friend Requests</button>{" "}
+        <button onClick={() => setPage("users")}>Find New Friends</button>
+      </div>
+
+
+      {page === "feed" && <Posts user={user} />}
+
+      {page === "friends" && <FriendRequests />}
+
+      {page === "users" && <Users user={user} />}
+
     </div>
   );
 }

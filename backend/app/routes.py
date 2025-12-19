@@ -257,7 +257,10 @@ def pending_friend_requests():
 
     return jsonify([{
         "id": r.id,
-        "from_user": r.user_id
+        "from": {
+            "id": r.sender.id,
+            "username": r.sender.username
+        }
     } for r in requests])
 
 
@@ -311,3 +314,30 @@ def get_conversation(message_id):
     if current_user.id not in [message.sender_id, message.receiver_id]:
         return jsonify(error="Unauthorized"), 403
     return jsonify(id=message.id, sender_id=message.sender_id, receiver_id=message.receiver_id, content=message.content, timestamp=message.timestamp.isoformat())
+
+# --------------------------
+# User Search
+# --------------------------
+@main.route("/users/search")
+@login_required
+def search_users():
+    q = request.args.get("q", "").strip()
+
+    if len(q) < 1:
+        return jsonify([])
+
+    users = (
+        User.query
+        .filter(User.username.ilike(f"%{q}%"))
+        .filter(User.id != current_user.id)
+        .limit(50)
+        .all()
+    )
+
+    return jsonify([
+        {
+            "id": u.id,
+            "username": u.username
+        }
+        for u in users
+    ])
